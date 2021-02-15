@@ -1,0 +1,20 @@
+###Bash script used for 16S rRNA gene sequence retrieval and renaming tree nodes
+
+###Extracted representative 16S rRNA gene sequence for each organism listed in Org_names.txt using SILVA_138.1_SSURef_tax_silva.fasta (downloaded from https://www.arb-silva.de)
+
+IFS=$'\n'; for i in $(cat Org_name.txt);do  line=$(grep -nr -m 1 "$i" sequence.fasta); if [[ ! -z $line ]];then for j in $line;do lineNumber=$(echo $j | cut -d':' -f1); sed -n "$lineNumber p" SILVA_138.1_SSURef_tax_silva.fasta; awk -v nb=$lineNumber 'NR > nb {if ($0 ~ ">") exit; else print $0 }' SILVA_138.1_SSURef_tax_silva.fasta; done;fi;done > output1.fasta
+
+###For organisms still missing a sequence, re-ran same code using sequence.fasta file  with sequences from NCBI RefSeq (downloaded from https://www.ncbi.nlm.nih.gov/)
+
+IFS=$'\n'; for i in $(cat Org_name.txt);do  line=$(grep -nr -m 1 "$i" sequence.fasta); if [[ ! -z $line ]];then for j in $line;do lineNumber=$(echo $j | cut -d':' -f1); sed -n "$lineNumber p" sequence.fasta; awk -v nb=$lineNumber 'NR > nb {if ($0 ~ ">") exit; else print $0 }' sequence.fasta; done;fi;done > output2.fasta
+
+###Approximately 90 species still missing representative sequence. Manually searched for sequences using NCBI Nucleotide
+
+###Final collection of representative 16S rRNA gene sequences in file tree_input.fasta
+
+
+###Tree nodes renamed using mapping_file.xlsx to replace node names with otu# using the following code
+
+cat mapping_file.txt | while read -r line; do species=`echo $line | awk '{print $1}'`; OTU=`echo $line | awk '{print $2}'`; sed -i "s/${species}/${OTU}/g" FastTree_output_tree.nhx; done > FastTree_otu.nhx
+
+###End bash code
